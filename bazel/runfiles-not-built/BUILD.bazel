@@ -1,0 +1,41 @@
+load("@bazel_skylib//rules:native_binary.bzl", "native_binary")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
+
+
+genrule(
+    name = "input_runfile",
+    outs = ["input_runfile.txt"],
+    cmd = """echo hello > $@"""
+)
+
+genrule(
+    name = "input_script",
+    outs = ["input_script.sh"],
+    cmd = """echo "echo hello" > $@"""
+)
+
+sh_binary(
+    name = "sh_bin",
+    srcs = [":input_script"],
+    data = [":input_runfile"]
+)
+
+native_binary(
+    name = "sh_bin_wrapper",
+    src = ":sh_bin",
+    out = "native_bin.exe",
+    data = [":input_script_copy"]
+)
+
+copy_file(
+    name = "input_script_copy",
+    src = ":input_script",
+    out = "native_bin",
+)
+
+genrule(
+    name = "sh_bin_wrapper_consumer",
+    srcs = [":sh_bin_wrapper"],
+    outs = ["out.txt"],
+    cmd = """$(location :sh_bin_wrapper) > $@""",
+)
